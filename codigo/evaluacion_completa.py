@@ -22,7 +22,7 @@ import openai
 # CONFIGURACIÓN
 # ═══════════════════════════════════════════════════════
 
-OPENROUTER_API_KEY = "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"
+OPENROUTER_API_KEY = "YOUR_OPENROUTER_API_KEY"
 LLM_MODEL = "deepseek/deepseek-chat"
 TOP_K = 10
 NUM_TEST_USERS = 20  # Usuarios a evaluar (más = más lento para LLM)

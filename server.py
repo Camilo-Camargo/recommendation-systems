@@ -21,7 +21,7 @@ import openai
 
 OPENROUTER_API_KEY = os.environ.get(
     "OPENROUTER_API_KEY",
-    "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",
+    "YOUR_OPENROUTER_API_KEY",
 )
 LLM_MODEL = "openrouter/free"
 TOP_K = 5
