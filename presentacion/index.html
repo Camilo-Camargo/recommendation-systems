@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistemas Recomendadores — ML vs LLMs</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@4.6.1/dist/reveal.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@4.6.1/dist/theme/white.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+        :root {
+            --c-black:#111;--c-dark:#1a1a1a;--c-gray-700:#444;--c-gray-500:#666;
+            --c-gray-400:#888;--c-gray-300:#aaa;--c-gray-200:#ccc;--c-gray-100:#e8e8e8;--c-white:#f5f5f5;
+        }
+        .reveal{font-family:'Inter',sans-serif;color:var(--c-dark);font-size:28px}
+        .reveal .slides{text-align:left}
+        .reveal h1,.reveal h2,.reveal h3{font-family:'Inter',sans-serif;color:var(--c-black);text-transform:none;font-weight:700;letter-spacing:-.02em;line-height:1.2}
+        .reveal h1{font-size:2.4em}.reveal h2{font-size:1.6em;margin-bottom:.6em}.reveal h3{font-size:1.1em;color:var(--c-gray-500);font-weight:500}
+        .reveal p,.reveal li{color:var(--c-gray-700);line-height:1.7;font-weight:400}
+        .reveal ul{list-style:none;padding-left:0}.reveal ul li{padding:.3em 0;padding-left:1.4em;position:relative}
+        .reveal ul li::before{content:'—';position:absolute;left:0;color:var(--c-gray-300);font-weight:300}
+        .reveal .slide-number{color:var(--c-gray-400);font-size:14px}
+        .title-slide{text-align:center!important}.title-slide h1{font-size:2.8em;margin-bottom:.1em}
+        .title-slide .subtitle{font-size:1.1em;color:var(--c-gray-500);font-weight:300;margin-top:0}
+        .title-slide .author{font-size:.7em;color:var(--c-gray-400);margin-top:2em;font-weight:300}
+        .section-slide{text-align:center!important;display:flex!important;align-items:center!important;justify-content:center!important}
+        .section-slide h2{font-size:2.2em;border-bottom:3px solid var(--c-black);padding-bottom:.3em;display:inline-block}
+        .card{background:var(--c-white);border:1px solid var(--c-gray-200);border-radius:8px;padding:1.2em 1.5em;margin:.5em 0}
+        .card h4{margin:0 0 .4em 0;font-size:.9em;font-weight:600;color:var(--c-black);text-transform:uppercase;letter-spacing:.05em}
+        .card p{margin:0;font-size:.85em}
+        .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:1em}
+        .grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.8em}
+        .reveal table{width:100%;border-collapse:collapse;font-size:.7em;margin-top:.5em}
+        .reveal table th{background:var(--c-black);color:white;padding:.7em 1em;text-align:left;font-weight:500}
+        .reveal table td{padding:.6em 1em;border-bottom:1px solid var(--c-gray-200);color:var(--c-gray-700)}
+        .reveal table tr:nth-child(even) td{background:var(--c-white)}
+        .tag{display:inline-block;padding:.2em .7em;border:1px solid var(--c-gray-300);border-radius:20px;font-size:.65em;color:var(--c-gray-500);margin:.15em;font-weight:400}
+        .tag.dark{background:var(--c-black);color:white;border-color:var(--c-black)}
+        .flow{display:flex;align-items:center;justify-content:center;gap:.5em;margin:1em 0;font-size:.8em}
+        .flow-box{background:var(--c-white);border:2px solid var(--c-black);padding:.6em 1.2em;border-radius:6px;font-weight:500}
+        .flow-arrow{color:var(--c-gray-400);font-size:1.4em}
+        .metric-bar{display:flex;align-items:center;margin:.3em 0;font-size:.75em}
+        .metric-label{width:180px;font-weight:500;color:var(--c-gray-700)}
+        .metric-track{flex:1;height:24px;background:var(--c-gray-100);border-radius:4px;overflow:hidden;position:relative}
+        .metric-fill{height:100%;background:var(--c-black);border-radius:4px;display:flex;align-items:center;justify-content:flex-end;padding-right:8px;color:white;font-size:.85em;font-weight:500}
+        .metric-fill.light{background:var(--c-gray-400)}.metric-fill.lighter{background:var(--c-gray-200);color:var(--c-gray-700)}
+        .reveal pre{font-family:'JetBrains Mono',monospace;font-size:.55em;background:var(--c-dark);color:#e0e0e0;border-radius:8px;padding:1em 1.2em;box-shadow:none;width:100%;box-sizing:border-box}
+        .reveal code{font-family:'JetBrains Mono',monospace}
+        .highlight{color:var(--c-black);font-weight:600}
+        .small{font-size:.7em;color:var(--c-gray-500)}
+        .ref{font-size:.55em;color:var(--c-gray-400);margin-top:.5em;font-style:italic}
+        .reveal blockquote{border-left:4px solid var(--c-black);background:var(--c-white);padding:.8em 1.2em;margin:1em 0;font-style:italic;color:var(--c-gray-700);box-shadow:none}
+        .divider{border:none;border-top:2px solid var(--c-gray-200);margin:1em 0}
+        .reveal .progress span{background:var(--c-black)}.reveal .controls button{color:var(--c-gray-400)!important}
+        .def-grid{display:grid;grid-template-columns:140px 1fr;gap:.2em .8em;font-size:.78em;margin-top:.5em}
+        .def-grid .term{font-weight:600;color:var(--c-black)}.def-grid .def{color:var(--c-gray-700)}
+    </style>
+</head>
+<body>
+<div class="reveal">
+<div class="slides">
+
+    <!-- ══ 1. TITULO ══ -->
+    <section class="title-slide">
+        <h1>Sistemas<br>Recomendadores</h1>
+        <p class="subtitle">Machine Learning vs Large Language Models</p>
+        <hr class="divider" style="width:200px;margin:1em auto;border-top-color:#111;">
+        <p class="author">Evaluación Comparativa de Enfoques</p>
+    </section>
+
+    <!-- ══ 2. AGENDA ══ -->
+    <section>
+        <h2>Agenda</h2>
+        <ul>
+            <li>Conceptos clave (glosario)</li>
+            <li>¿Qué es un sistema recomendador?</li>
+            <li>Tipos de sistemas recomendadores</li>
+            <li>Cuándo usar cada enfoque — con ejemplos reales</li>
+            <li>LLMs como sistemas recomendadores</li>
+            <li>Evaluación comparativa: ML vs LLM</li>
+            <li>Demo en vivo con código</li>
+            <li>Referencias</li>
+        </ul>
+    </section>
+
+    <!-- ══ 3. GLOSARIO PARTE 1 ══ -->
+    <section>
+        <h2>Conceptos Clave — Parte 1</h2>
+        <h3>Términos que usaremos a lo largo de la presentación</h3>
+        <div class="def-grid" style="margin-top:1em;">
+            <span class="term">Similitud Coseno</span>
+            <span class="def">Medida matemática que compara qué tan parecidos son dos elementos. Va de 0 (nada parecidos) a 1 (idénticos). Es como comparar la dirección de dos flechas.</span>
+            <span class="term">TF-IDF</span>
+            <span class="def">Técnica que convierte texto en números. Mide qué tan importante es una palabra para un documento. Si "acción" aparece mucho en UNA película pero poco en el catálogo general, tiene un TF-IDF alto.</span>
+            <span class="term">Embeddings</span>
+            <span class="def">Representación de palabras, productos o usuarios como listas de números (vectores). Permite que la máquina entienda que "zapatilla" y "tenis" son conceptos similares.</span>
+            <span class="term">Cold-start</span>
+            <span class="def">Problema que ocurre cuando un usuario o producto es nuevo y no hay historial previo. Es como recomendar música a alguien que acabas de conocer.</span>
+            <span class="term">Serendipia</span>
+            <span class="def">Capacidad del sistema de recomendar algo inesperado pero acertado. Descubrirte una película de un género que nunca buscaste pero que te encanta.</span>
+            <span class="term">Factores latentes</span>
+            <span class="def">Características ocultas que el algoritmo descubre automáticamente. Ejemplo: un factor podría representar "películas de acción con humor" sin que nadie lo programe.</span>
+        </div>
+    </section>
+
+    <!-- ══ 4. GLOSARIO PARTE 2 ══ -->
+    <section>
+        <h2>Conceptos Clave — Parte 2</h2>
+        <div class="def-grid" style="margin-top:.5em;">
+            <span class="term">SVD</span>
+            <span class="def">Singular Value Decomposition — descompone una tabla grande de ratings en componentes más pequeños para encontrar patrones ocultos entre usuarios y productos.</span>
+            <span class="term">Precision@K</span>
+            <span class="def">De las K recomendaciones que dimos, ¿cuántas realmente le gustaron al usuario? Ejemplo: si recomendamos 10 películas y 7 le gustaron → Precision@10 = 70%.</span>
+            <span class="term">NDCG</span>
+            <span class="def">Normalized Discounted Cumulative Gain — mide no solo si acertamos, sino si pusimos las mejores recomendaciones primero en la lista. El orden importa.</span>
+            <span class="term">Zero-shot</span>
+            <span class="def">Pedirle a un modelo de IA que haga una tarea sin darle ningún ejemplo previo. Solo se le da la instrucción y los datos.</span>
+            <span class="term">Few-shot</span>
+            <span class="def">Darle al modelo 2-3 ejemplos de cómo queremos que responda antes de hacerle la pregunta real. Le enseñamos "con el ejemplo".</span>
+            <span class="term">RAG</span>
+            <span class="def">Retrieval-Augmented Generation — se busca información relevante en una base de datos y se le pasa al LLM como contexto antes de que responda.</span>
+            <span class="term">LLM</span>
+            <span class="def">Large Language Model — modelo de inteligencia artificial entrenado con grandes cantidades de texto que puede entender y generar lenguaje natural (ej: ChatGPT, Llama).</span>
+        </div>
+    </section>
+
+    <!-- ══ 5. QUE ES ══ -->
+    <section>
+        <h2>¿Qué es un sistema recomendador?</h2>
+        <blockquote>
+            Un software que predice qué <span class="highlight">productos, contenidos o servicios</span> podrían interesarle a un usuario, basándose en datos previos.
+        </blockquote>
+        <div class="flow">
+            <div class="flow-box">Usuario</div>
+            <span class="flow-arrow">&rarr;</span>
+            <div class="flow-box">Datos<br>(historial, clicks)</div>
+            <span class="flow-arrow">&rarr;</span>
+            <div class="flow-box">Modelo</div>
+            <span class="flow-arrow">&rarr;</span>
+            <div class="flow-box">Recomendaciones<br>personalizadas</div>
+        </div>
+        <p class="small" style="text-align:center;margin-top:1em;">
+            Según Amazon, el <span class="highlight">35%</span> de sus ventas provienen de recomendaciones.<br>
+            Netflix estima que el <span class="highlight">75%</span> de lo que ven sus usuarios viene de su sistema de recomendaciones.
+        </p>
+        <p class="ref">Fuentes: McKinsey & Company, 2013 — "How retailers can keep up with consumers" | Netflix Tech Blog, 2012 — "Netflix Recommendations: Beyond the 5 stars"</p>
+    </section>
+
+    <!-- ══ 6. SECCION TIPOS ══ -->
+    <section class="section-slide">
+        <div><h2>Tipos de Sistemas Recomendadores</h2></div>
+    </section>
+
+    <!-- ══ 7. TAXONOMIA ══ -->
+    <section>
+        <h2>Los 5 enfoques principales</h2>
+        <div class="grid-3">
+            <div class="card">
+                <h4>1. Filtrado Colaborativo</h4>
+                <p>«Personas con gustos parecidos a los tuyos también disfrutaron esto»</p>
+            </div>
+            <div class="card">
+                <h4>2. Basado en Contenido</h4>
+                <p>«Esta película es de ciencia ficción y te gustan las de ciencia ficción»</p>
+            </div>
+            <div class="card">
+                <h4>3. Basado en Conocimiento</h4>
+                <p>«Buscas un hotel en Madrid, 4 estrellas, menos de 150€ por noche»</p>
+            </div>
+        </div>
+        <div class="grid-2" style="margin-top:.8em;">
+            <div class="card">
+                <h4>4. Híbrido</h4>
+                <p>Combina varios enfoques para cubrir las debilidades de cada uno.</p>
+            </div>
+            <div class="card">
+                <h4>5. Basado en LLM</h4>
+                <p>Un modelo de lenguaje analiza y razona sobre qué recomendar.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ══ 8. FILTRADO COLABORATIVO ══ -->
+    <section>
+        <h2>1. Filtrado Colaborativo</h2>
+        <h3>Se basa en el comportamiento de OTROS usuarios similares a ti</h3>
+        <div class="grid-2" style="margin-top:.8em;">
+            <div>
+                <ul>
+                    <li><span class="highlight">User-based:</span> encuentra personas con gustos similares y recomienda lo que ellos disfrutaron</li>
+                    <li><span class="highlight">Item-based:</span> encuentra productos que suelen gustarle a la misma gente</li>
+                    <li><span class="highlight">Factorización matricial (SVD):</span> descompone la tabla de ratings para descubrir patrones ocultos (factores latentes)</li>
+                </ul>
+            </div>
+            <div>
+                <div class="card">
+                    <h4>Cuándo usarlo</h4>
+                    <p>Cuando tienes muchos usuarios con historial de compras o ratings. No necesitas saber nada del producto en sí.</p>
+                </div>
+                <div class="card" style="margin-top:.5em;">
+                    <h4>Limitación principal</h4>
+                    <p><span class="highlight">Cold-start:</span> no funciona bien con usuarios o productos nuevos que no tienen historial.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ══ 9. CF EJEMPLOS REALES ══ -->
+    <section>
+        <h2>Filtrado Colaborativo — Casos Reales</h2>
+        <table>
+            <tr><th>Empresa</th><th>Cómo lo usa</th><th>Detalle verificable</th></tr>
+            <tr>
+                <td><span class="highlight">Amazon</span></td>
+                <td>Item-based CF</td>
+                <td>«Clientes que compraron X también compraron Y» — sistema patentado en 2003 por Greg Linden.</td>
+            </tr>
+            <tr>
+                <td><span class="highlight">Netflix</span></td>
+                <td>SVD (factorización matricial)</td>
+                <td>El Netflix Prize (2006-2009) ofreció US$1 millón a quien mejorara su sistema un 10%. El equipo ganador usó SVD.</td>
+            </tr>
+            <tr>
+                <td><span class="highlight">Spotify</span></td>
+                <td>CF + análisis de audio</td>
+                <td>Discover Weekly (lanzado 2015) combina patrones colaborativos con análisis de audio para 40M+ de playlists semanales.</td>
+            </tr>
+            <tr>
+                <td><span class="highlight">Last.fm</span></td>
+                <td>User-based CF</td>
+                <td>Pionero en radio personalizada basada en historial de escucha usando vecinos más cercanos.</td>
+            </tr>
+        </table>
+        <p class="ref">Fuentes: Linden et al., IEEE, 2003 | Netflix Prize — en.wikipedia.org/wiki/Netflix_Prize | Spotify Engineering Blog, 2015</p>
+    </section>
+
+    <!-- ══ 10. BASADO EN CONTENIDO ══ -->
+    <section>
+        <h2>2. Basado en Contenido</h2>
+        <h3>Se basa en las CARACTERÍSTICAS del producto, no en otros usuarios</h3>
+        <div class="grid-2" style="margin-top:.8em;">
+            <div>
+                <ul>
+                    <li>Analiza <span class="highlight">atributos</span> del producto: género, director, palabras clave, descripción</li>
+                    <li>Construye un <span class="highlight">perfil del usuario</span> a partir de lo que ya consumió</li>
+                    <li>Usa <span class="highlight">similitud coseno</span> (comparación matemática) para encontrar productos parecidos</li>
+                </ul>
+                <div class="flow" style="font-size:.7em;margin-top:1em;">
+                    <div class="flow-box">Perfil del usuario</div>
+                    <span class="flow-arrow">&rarr;</span>
+                    <div class="flow-box">Comparación<br>(similitud coseno)</div>
+                    <span class="flow-arrow">&rarr;</span>
+                    <div class="flow-box">Top productos<br>más parecidos</div>
+                </div>
+            </div>
+            <div>
+                <div class="card">
+                    <h4>Cuándo usarlo</h4>
+                    <p>Cuando tienes buena información sobre los productos (descripciones, categorías) pero pocos usuarios.</p>
+                </div>
+                <div class="card" style="margin-top:.5em;">
+                    <h4>Limitación principal</h4>
+                    <p><span class="highlight">Burbuja de filtro:</span> solo recomienda más de lo mismo. Si te gusta acción, nunca te sugerirá una comedia que podrías disfrutar.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ══ 11. CONTENIDO EJEMPLOS REALES ══ -->
+    <section>
+        <h2>Basado en Contenido — Casos Reales</h2>
+        <table>
+            <tr><th>Empresa</th><th>Cómo lo usa</th><th>Detalle verificable</th></tr>
+            <tr>
+                <td><span class="highlight">Pandora</span></td>
+                <td>Music Genome Project</td>
+                <td>Cada canción tiene hasta 450 atributos musicales clasificados por expertos humanos (tempo, armonía, etc.).</td>
+            </tr>
+            <tr>
+                <td><span class="highlight">Google News</span></td>
+                <td>Perfil temático + historial</td>
+                <td>Construye un perfil de intereses del usuario basado en los artículos que lee y su contenido.</td>
+            </tr>
+            <tr>
+                <td><span class="highlight">LinkedIn</span></td>
+                <td>Skills matching</td>
+                <td>Recomienda empleos comparando las habilidades del usuario con los requisitos de las ofertas publicadas.</td>
+            </tr>
+        </table>
+        <p class="ref">Fuentes: en.wikipedia.org/wiki/Music_Genome_Project | Google News Personalization — Das et al., WWW 2007 | LinkedIn Engineering Blog</p>
+    </section>
+
+    <!-- ══ 12. BASADO EN CONOCIMIENTO ══ -->
+    <section>
+        <h2>3. Basado en Conocimiento</h2>
+        <h3>El usuario dice explícitamente qué necesita y el sistema filtra</h3>
+        <div class="grid-2" style="margin-top:.8em;">
+            <div>
+                <ul>
+                    <li>El usuario define <span class="highlight">restricciones</span>: precio máximo, categoría, ubicación, etc.</li>
+                    <li>El sistema aplica <span class="highlight">reglas del dominio</span> para filtrar y ordenar opciones</li>
+                    <li>No necesita historial previo — ideal para compras únicas</li>
+                </ul>
+            </div>
+            <div>
+                <div class="card">
+                    <h4>Cuándo usarlo</h4>
+                    <p>Compras infrecuentes donde el usuario sabe lo que quiere: autos, casas, vuelos, hoteles.</p>
+                </div>
+                <div class="card" style="margin-top:.5em;">
+                    <h4>Casos reales</h4>
+                    <p><span class="highlight">Booking.com</span> — filtros de precio, estrellas, ubicación<br>
+                    <span class="highlight">Kayak</span> — búsqueda de vuelos con restricciones<br>
+                    <span class="highlight">Zillow</span> — búsqueda de propiedades por criterios</p>
+                </div>
+            </div>
+        </div>
+        <p class="ref">Fuente: Burke, R. "Knowledge-based recommender systems" — Encyclopedia of Library and Information Systems, 2000</p>
+    </section>
+
+    <!-- ══ 13. HIBRIDOS ══ -->
+    <section>
+        <h2>4. Sistemas Híbridos</h2>
+        <h3>Combinan múltiples enfoques para compensar debilidades</h3>
+        <div class="grid-2" style="margin-top:.8em;">
+            <div>
+                <ul>
+                    <li><span class="highlight">Weighted:</span> promedia los puntajes de varios sistemas</li>
+                    <li><span class="highlight">Switching:</span> elige el mejor sistema según el contexto</li>
+                    <li><span class="highlight">Cascade:</span> un sistema filtra candidatos y otro los ordena</li>
+                </ul>
+            </div>
+            <div>
+                <div class="card">
+                    <h4>Casos reales</h4>
+                    <p><span class="highlight">Netflix</span> — CF + contenido + deep learning<br>
+                    <span class="highlight">YouTube</span> — genera candidatos y luego los rankea (modelo de dos fases)<br>
+                    <span class="highlight">Spotify</span> — CF + análisis de audio + análisis de texto en letras</p>
+                </div>
+                <div class="card" style="margin-top:.5em;">
+                    <h4>Cuándo usarlo</h4>
+                    <p>A escala empresarial, cuando ningún enfoque único es suficiente y se tienen datos de diferentes tipos.</p>
+                </div>
+            </div>
+        </div>
+        <p class="ref">Fuentes: Covington et al., "Deep Neural Networks for YouTube Recommendations", RecSys 2016 | Netflix Tech Blog</p>
+    </section>
+
+    <!-- ══ 14. SECCION LLM ══ -->
+    <section class="section-slide">
+        <div><h2>LLMs como Recomendadores</h2></div>
+    </section>
+
+    <!-- ══ 15. LLM ENFOQUE ══ -->
+    <section>
+        <h2>5. ¿Cómo funciona un LLM como recomendador?</h2>
+        <h3>Se le pasa el catálogo y la consulta como texto, y el modelo razona</h3>
+        <div class="flow">
+            <div class="flow-box">Historial<br>del usuario</div>
+            <span class="flow-arrow">&rarr;</span>
+            <div class="flow-box">Prompt<br>(instrucción en texto)</div>
+            <span class="flow-arrow">&rarr;</span>
+            <div class="flow-box">LLM<br>(modelo de lenguaje)</div>
+            <span class="flow-arrow">&rarr;</span>
+            <div class="flow-box">Recomendaciones<br>+ explicaciones</div>
+        </div>
+        <div class="grid-3" style="margin-top:1em;">
+            <div class="card">
+                <h4>Zero-shot</h4>
+                <p>Se le da solo la instrucción. El modelo usa su conocimiento general, sin ejemplos.</p>
+            </div>
+            <div class="card">
+                <h4>Few-shot</h4>
+                <p>Se le dan 2-3 ejemplos de cómo queremos que responda antes de la pregunta real.</p>
+            </div>
+            <div class="card">
+                <h4>RAG</h4>
+                <p>Se buscan datos relevantes en una base de datos y se le pasan como contexto al modelo.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ══ 16. VENTAJAS LLM ══ -->
+    <section>
+        <h2>LLMs — Ventajas y Limitaciones</h2>
+        <div class="grid-2">
+            <div class="card">
+                <h4>Ventajas</h4>
+                <ul>
+                    <li>Resuelve <span class="highlight">cold-start</span> naturalmente (no necesita historial)</li>
+                    <li>Genera <span class="highlight">explicaciones legibles</span>: «Te recomiendo esto porque...»</li>
+                    <li>Entiende <span class="highlight">contexto y matices</span> del lenguaje natural</li>
+                    <li>Funciona en cualquier dominio sin reentrenar</li>
+                </ul>
+            </div>
+            <div class="card">
+                <h4>Limitaciones</h4>
+                <ul>
+                    <li><span class="highlight">Lento:</span> segundos vs milisegundos de ML tradicional</li>
+                    <li><span class="highlight">Costoso:</span> cada consulta consume recursos de cómputo</li>
+                    <li><span class="highlight">Alucinaciones:</span> puede inventar productos que no existen</li>
+                    <li>No captura patrones colaborativos implícitos</li>
+                </ul>
+            </div>
+        </div>
+        <div class="card" style="margin-top:.8em;">
+            <h4>Casos reales</h4>
+            <p><span class="highlight">Shopify</span> — asistente de compras con LLM que recomienda productos en lenguaje natural (Shopify Magic, 2023)<br>
+            <span class="highlight">Amazon Rufus</span> — asistente de compras con IA lanzado en 2024 que responde preguntas y recomienda productos</p>
+        </div>
+        <p class="ref">Fuentes: Shopify Engineering Blog, 2023 | Amazon Rufus — aboutamazon.com, 2024</p>
+    </section>
+
+    <!-- ══ 17. SECCION COMPARATIVA ══ -->
+    <section class="section-slide">
+        <div><h2>Evaluación Comparativa</h2></div>
+    </section>
+
+    <!-- ══ 18. TABLA COMPARATIVA ══ -->
+    <section>
+        <h2>¿Cuándo usar cada enfoque?</h2>
+        <table>
+            <tr><th>Criterio</th><th>Colaborativo</th><th>Contenido</th><th>Conocimiento</th><th>LLM</th></tr>
+            <tr>
+                <td>Datos necesarios</td><td>Muchas interacciones</td><td>Descripciones ricas</td><td>Reglas del dominio</td><td>Texto descriptivo</td>
+            </tr>
+            <tr>
+                <td>Cold-start (usuario nuevo)</td>
+                <td style="color:#c00;">No funciona</td><td>Funciona parcial</td>
+                <td style="color:#080;">Sin problema</td><td style="color:#080;">Sin problema</td>
+            </tr>
+            <tr>
+                <td>Escalabilidad</td>
+                <td style="color:#080;">Alta</td><td style="color:#080;">Alta</td>
+                <td>Media</td><td style="color:#c00;">Costoso a escala</td>
+            </tr>
+            <tr>
+                <td>Explicabilidad</td><td>Baja</td><td>Media</td>
+                <td style="color:#080;">Alta</td><td style="color:#080;">Alta (lenguaje natural)</td>
+            </tr>
+            <tr>
+                <td>Serendipia (sorpresa positiva)</td>
+                <td style="color:#080;">Alta</td><td style="color:#c00;">Baja</td>
+                <td style="color:#c00;">Baja</td><td style="color:#080;">Alta</td>
+            </tr>
+            <tr>
+                <td>Velocidad de respuesta</td>
+                <td style="color:#080;">&lt;50ms</td><td style="color:#080;">&lt;50ms</td>
+                <td style="color:#080;">&lt;100ms</td><td style="color:#c00;">1-30 segundos</td>
+            </tr>
+        </table>
+    </section>
+
+    <!-- ══ 19. METRICAS ══ -->
+    <section>
+        <h2>¿Cómo medimos cuál es mejor?</h2>
+        <h3>Métricas de evaluación explicadas de forma sencilla</h3>
+        <div class="grid-2" style="margin-top:.5em;">
+            <div>
+                <div class="card">
+                    <h4>Precisión y relevancia</h4>
+                    <ul>
+                        <li><span class="highlight">Precision@K:</span> si recomiendo 10 productos, ¿cuántos realmente le gustan al usuario?</li>
+                        <li><span class="highlight">Recall@K:</span> de todo lo que le gusta al usuario, ¿cuánto logré capturar en mis recomendaciones?</li>
+                        <li><span class="highlight">NDCG:</span> ¿las mejores recomendaciones están primero en la lista? El orden importa.</li>
+                    </ul>
+                </div>
+            </div>
+            <div>
+                <div class="card">
+                    <h4>Más allá de la precisión</h4>
+                    <ul>
+                        <li><span class="highlight">Diversidad:</span> ¿las recomendaciones son variadas o todas son del mismo tipo?</li>
+                        <li><span class="highlight">Cobertura:</span> ¿el sistema recomienda de todo el catálogo o solo los más populares?</li>
+                        <li><span class="highlight">Latencia:</span> ¿cuánto tarda en responder?</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ══ 20. RESULTADOS ══ -->
+    <section>
+        <h2>Resultados — Nuestra Demo (Productos)</h2>
+        <h3>Consulta de prueba: «recomiéndame un zapato deportivo» · 5 sistemas</h3>
+        <div style="margin-top:1em;">
+            <p style="font-weight:600;font-size:.8em;margin-bottom:.3em;">Score de Relevancia (mayor = mejor)</p>
+            <div class="metric-bar">
+                <span class="metric-label">LLM Few-shot</span>
+                <div class="metric-track"><div class="metric-fill" style="width:93%">0.93</div></div>
+            </div>
+            <div class="metric-bar">
+                <span class="metric-label">LLM Zero-shot</span>
+                <div class="metric-track"><div class="metric-fill" style="width:90%">0.90</div></div>
+            </div>
+            <div class="metric-bar">
+                <span class="metric-label">Conocimiento (Reglas)</span>
+                <div class="metric-track"><div class="metric-fill light" style="width:80%">0.80</div></div>
+            </div>
+            <div class="metric-bar">
+                <span class="metric-label">Colaborativo</span>
+                <div class="metric-track"><div class="metric-fill light" style="width:70%">0.70</div></div>
+            </div>
+            <div class="metric-bar">
+                <span class="metric-label">Contenido (TF-IDF)</span>
+                <div class="metric-track"><div class="metric-fill lighter" style="width:14%">0.14</div></div>
+            </div>
+        </div>
+        <div style="margin-top:1em;">
+            <p style="font-weight:600;font-size:.8em;margin-bottom:.3em;">Latencia (menor = mejor)</p>
+            <div class="metric-bar">
+                <span class="metric-label">Conocimiento (Reglas)</span>
+                <div class="metric-track"><div class="metric-fill" style="width:2%">&lt;1ms</div></div>
+            </div>
+            <div class="metric-bar">
+                <span class="metric-label">Contenido (TF-IDF)</span>
+                <div class="metric-track"><div class="metric-fill" style="width:2%">&lt;1ms</div></div>
+            </div>
+            <div class="metric-bar">
+                <span class="metric-label">Colaborativo</span>
+                <div class="metric-track"><div class="metric-fill" style="width:3%">1ms</div></div>
+            </div>
+            <div class="metric-bar">
+                <span class="metric-label">LLM Zero-shot</span>
+                <div class="metric-track"><div class="metric-fill lighter" style="width:50%">~6s</div></div>
+            </div>
+            <div class="metric-bar">
+                <span class="metric-label">LLM Few-shot</span>
+                <div class="metric-track"><div class="metric-fill lighter" style="width:100%">~28s</div></div>
+            </div>
+        </div>
+        <p class="ref">Datos obtenidos de nuestra demo usando OpenRouter (modelo gratuito) + scikit-learn. Resultados pueden variar por carga del servidor.</p>
+    </section>
+
+    <!-- ══ 21. HALLAZGOS ══ -->
+    <section>
+        <h2>Hallazgos Clave</h2>
+        <div class="grid-2">
+            <div class="card">
+                <h4>ML Tradicional gana en</h4>
+                <ul>
+                    <li><span class="highlight">Velocidad</span> — milisegundos vs segundos</li>
+                    <li><span class="highlight">Costo</span> — no requiere APIs externas</li>
+                    <li><span class="highlight">Escalabilidad</span> — sirve millones de usuarios</li>
+                    <li><span class="highlight">Personalización fina</span> — con historial largo</li>
+                </ul>
+            </div>
+            <div class="card">
+                <h4>LLM gana en</h4>
+                <ul>
+                    <li><span class="highlight">Relevancia</span> — entiende la intención real</li>
+                    <li><span class="highlight">Cold-start</span> — funciona sin historial</li>
+                    <li><span class="highlight">Explicabilidad</span> — dice POR QUÉ recomienda</li>
+                    <li><span class="highlight">Flexibilidad</span> — cualquier dominio, sin reentrenar</li>
+                </ul>
+            </div>
+        </div>
+        <blockquote style="margin-top:1em;">
+            No hay un ganador universal. La elección depende de: <span class="highlight">volumen de datos</span>, <span class="highlight">velocidad requerida</span>, <span class="highlight">presupuesto</span> y <span class="highlight">necesidad de explicar</span> las recomendaciones.
+        </blockquote>
+    </section>
+
+    <!-- ══ 22. ARQUITECTURA IDEAL ══ -->
+    <section>
+        <h2>Arquitectura Recomendada</h2>
+        <h3>Lo mejor de ambos mundos: sistema híbrido ML + LLM</h3>
+        <div class="flow" style="margin-top:1em;">
+            <div class="flow-box">Fase 1<br><span class="small">ML filtra millones<br>a cientos de candidatos</span></div>
+            <span class="flow-arrow">&rarr;</span>
+            <div class="flow-box">Fase 2<br><span class="small">ML ordena los<br>candidatos por relevancia</span></div>
+            <span class="flow-arrow">&rarr;</span>
+            <div class="flow-box">Fase 3<br><span class="small">LLM re-ordena<br>y genera explicaciones</span></div>
+            <span class="flow-arrow">&rarr;</span>
+            <div class="flow-box">Usuario<br><span class="small">ve recomendaciones<br>con razones claras</span></div>
+        </div>
+        <div class="grid-2" style="margin-top:1em;">
+            <div class="card">
+                <h4>ML hace el trabajo pesado</h4>
+                <p>Filtrado colaborativo y contenido procesan todo el catálogo en milisegundos, reduciendo millones de opciones a un centenar.</p>
+            </div>
+            <div class="card">
+                <h4>LLM agrega inteligencia</h4>
+                <p>Recibe los ~100 candidatos, entiende el contexto del usuario, re-ordena y genera explicaciones naturales. Solo procesa unos pocos productos.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ══ 23. DEMO ══ -->
+    <section class="section-slide">
+        <div><h2>Demo en Vivo</h2></div>
+    </section>
+
+    <!-- ══ 24. DEMO EXPLICACION ══ -->
+    <section>
+        <h2>Demo — Cómo funciona</h2>
+        <h3>5 sistemas evalúan la misma consulta en tiempo real</h3>
+        <table>
+            <tr><th>#</th><th>Sistema</th><th>Tipo</th><th>Cómo funciona internamente</th></tr>
+            <tr><td>1</td><td>Basado en Contenido</td><td>ML</td><td>TF-IDF convierte texto en números → similitud coseno compara la consulta con cada producto</td></tr>
+            <tr><td>2</td><td>Filtrado Colaborativo</td><td>ML</td><td>Busca usuarios similares en una tabla de compras → recomienda lo que ellos compraron</td></tr>
+            <tr><td>3</td><td>Basado en Conocimiento</td><td>ML</td><td>30+ reglas manuales: «zapato» filtra categoría, «correr» filtra subcategoría → ordena por popularidad</td></tr>
+            <tr><td>4</td><td>LLM Zero-shot</td><td>LLM</td><td>Se envía catálogo + consulta al modelo → responde sin ejemplos previos</td></tr>
+            <tr><td>5</td><td>LLM Few-shot</td><td>LLM</td><td>Se envía catálogo + 2 ejemplos + consulta → el modelo aprende del patrón y responde mejor</td></tr>
+        </table>
+        <p style="text-align:center;margin-top:1em;font-size:.9em;">
+            <span class="highlight">http://localhost:8080/demo</span>
+        </p>
+    </section>
+
+    <!-- ══ 25. CONCLUSIONES ══ -->
+    <section>
+        <h2>Conclusiones</h2>
+        <ul>
+            <li>No existe un enfoque <span class="highlight">universalmente superior</span> — depende del contexto</li>
+            <li>ML tradicional es <span class="highlight">rápido, barato y escalable</span> — ideal para producción</li>
+            <li>LLMs aportan <span class="highlight">comprensión del lenguaje y explicabilidad</span> sin precedentes</li>
+            <li>El futuro está en <span class="highlight">sistemas híbridos</span>: ML filtra, LLM razona</li>
+            <li>La elección depende de: datos, latencia, presupuesto y dominio</li>
+        </ul>
+    </section>
+
+    <!-- ══ 26. REFERENCIAS ══ -->
+    <section>
+        <h2>Referencias</h2>
+        <div style="font-size:.7em;line-height:1.9;color:var(--c-gray-700);">
+            <p><span class="highlight">[1]</span> Linden, G., Smith, B., York, J. — «Amazon.com Recommendations: Item-to-Item Collaborative Filtering» — IEEE Internet Computing, 2003<br>
+            <span style="color:#888">en.wikipedia.org/wiki/Item-item_collaborative_filtering</span></p>
+            <p><span class="highlight">[2]</span> Netflix Prize — Competencia pública 2006-2009, premio de US$1M<br>
+            <span style="color:#888">en.wikipedia.org/wiki/Netflix_Prize</span></p>
+            <p><span class="highlight">[3]</span> Covington, P., Adams, J., Sargin, E. — «Deep Neural Networks for YouTube Recommendations» — ACM RecSys, 2016</p>
+            <p><span class="highlight">[4]</span> Pandora Music Genome Project — Sistema de 450 atributos musicales<br>
+            <span style="color:#888">en.wikipedia.org/wiki/Music_Genome_Project</span></p>
+            <p><span class="highlight">[5]</span> Netflix Tech Blog — «Netflix Recommendations: Beyond the 5 stars», 2012<br>
+            <span style="color:#888">netflixtechblog.com</span></p>
+            <p><span class="highlight">[6]</span> McKinsey & Company — «How retailers can keep up with consumers», 2013 (dato de Amazon 35%)</p>
+            <p><span class="highlight">[7]</span> Burke, R. — «Knowledge-based recommender systems» — Encyclopedia of Library and Information Systems, 2000</p>
+        </div>
+    </section>
+
+    <!-- ══ 27. GRACIAS ══ -->
+    <section class="title-slide">
+        <h1>Gracias</h1>
+        <p class="subtitle">¿Preguntas?</p>
+    </section>
+
+</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@4.6.1/dist/reveal.js"></script>
+<script>
+    Reveal.initialize({
+        hash: true,
+        slideNumber: true,
+        width: 1280,
+        height: 720,
+        margin: 0.08,
+        transition: 'none',
+        backgroundTransition: 'none',
+        center: false,
+    });
+</script>
+</body>
+</html>
