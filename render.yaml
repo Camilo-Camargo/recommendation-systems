@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: recommendation-systems
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn server:app --bind 0.0.0.0:$PORT
+    envVars:
+      - key: OPENROUTER_API_KEY
+        value: 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
+      - key: PYTHON_VERSION
+        value: "3.11.0"
+    plan: free
+    region: oregon
