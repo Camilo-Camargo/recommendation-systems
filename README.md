@@ -70,16 +70,6 @@ recommendation-systems/
     evaluacion_completa.py   -- Evaluacion con dataset MovieLens
 ```
 
-## Despliegue gratuito
-
-El proyecto puede desplegarse en Render.com o Railway.app:
-
-1. Subir el repositorio a GitHub
-2. Crear un Web Service conectado al repo
-3. Build command: `pip install -r requirements.txt`
-4. Start command: `gunicorn server:app --bind 0.0.0.0:$PORT`
-5. Agregar variable de entorno: `OPENROUTER_API_KEY`
-
 ## Tecnologias
 
 - Python, Flask, Gunicorn
